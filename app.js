@@ -22,7 +22,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
-
+//封装send
+app.use((req, res, next) => {
+  res.cc = function(err, code = 1) {
+    res.send({
+      code,
+      msg: err instanceof Error ? err.message : err
+    });
+  };
+  next();
+});
 app.use("/", indexRouter);
 app.use("/user", usersRouter);
 
