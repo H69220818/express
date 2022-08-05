@@ -5,6 +5,7 @@ var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 // 导入 cors 中间件
 const cors = require("cors");
+const joi = require("joi");
 
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/user");
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+
 //封装send
 app.use((req, res, next) => {
   res.cc = function(err, code = 1) {
@@ -32,8 +34,17 @@ app.use((req, res, next) => {
   };
   next();
 });
+
 app.use("/", indexRouter);
 app.use("/user", usersRouter);
+
+// 错误中间件
+app.use(function(err, req, res, next) {
+  // 数据验证失败
+  if (err instanceof joi.ValidationError) return res.cc(err);
+  // 未知错误
+  res.cc(err);
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
