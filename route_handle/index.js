@@ -1,8 +1,7 @@
-const { db } = require("../config");
+const { db, setToken } = require("../config");
 const bcryptjs = require("bcryptjs");
 exports.register = (req, res) => {
   let userinfo = req.body;
-  console.log(userinfo);
   if (!userinfo.username || !userinfo.password) {
     // return res.send({ code: 403, msg: "用户名或密码不合法" });
     return res.cc("用户名或密码不合法");
@@ -50,7 +49,35 @@ exports.register = (req, res) => {
   //   });
 };
 exports.login = (req, res) => {
-  res.send("login page");
+  const userinfo = req.body;
+  console.log(userinfo);
+  const sql = `select * from user where username=?`;
+  db.query(sql, userinfo.username, function(err, results) {
+    // 执行 SQL 语句失败
+    if (err) return res.cc(err);
+    // 执行 SQL 语句成功，但是查询到数据条数不等于 1
+    if (results.length !== 1) return res.cc("登录失败！");
+    // TODO：判断用户输入的登录密码是否和数据库中的密码一致
+    // 拿着用户输入的密码,和数据库中存储的密码进行对比
+    const compareResult = bcryptjs.compareSync(
+      userinfo.password,
+      results[0].password
+    );
+    console.log(results, "compareResult");
+    // 如果对比的结果等于 false, 则证明用户输入的密码错误
+    if (!compareResult) {
+      return res.cc("登录失败！");
+    }
+
+    // TODO：登录成功，生成 Token 字符串
+    // 剔除完毕之后，user 中只保留了用户的 id, username, nickname, email 这四个属性的值
+    const user = { ...results[0], password: "" };
+    let token = setToken(user, 60 * 60);
+    res.send({
+      code: 200,
+      token
+    });
+  });
 };
 
 exports.logout = (req, res) => {

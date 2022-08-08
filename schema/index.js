@@ -20,7 +20,7 @@ const joi = require("joi");
 const username = joi
   .string()
   .alphanum()
-  .min(1)
+  .min(5)
   .max(10)
   .required()
   .error(new Error("用户名不合法"));

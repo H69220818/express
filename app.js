@@ -6,11 +6,21 @@ var logger = require("morgan");
 // 导入 cors 中间件
 const cors = require("cors");
 const joi = require("joi");
+const { validationResult } = require("express-validator");
 
-var indexRouter = require("./routes/index");
-var usersRouter = require("./routes/user");
+const { decodeToken, errorToken } = require("./config");
 
 var app = express();
+// 注意：只要配置成功了 express-jwt 这个中间件，就可以把解析出来的用户信息，挂载到 `req.user` 属性上
+// 解析toke
+app.use(decodeToken);
+// 处理错误
+// 错误中间件写在最后
+app.use(errorToken);
+
+var indexRouter = require("./routes/index");
+var usersRouter = require("./routes/users");
+var userInfoRouter = require("./routes/userInfo");
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
@@ -36,7 +46,8 @@ app.use((req, res, next) => {
 });
 
 app.use("/", indexRouter);
-app.use("/user", usersRouter);
+app.use("/users", usersRouter);
+app.use("/userInfo", userInfoRouter);
 
 // 错误中间件
 app.use(function(err, req, res, next) {
